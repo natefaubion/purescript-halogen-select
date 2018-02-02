@@ -21,6 +21,7 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.CSS as HC
 import Select.Primitives.Container as C
 import Select.Primitives.Search as S
+import Select.Effects (Effects)
 
 type TypeaheadItem = String
 
@@ -36,8 +37,10 @@ type State =
   { items    :: Array TypeaheadItem
   , selected :: Array TypeaheadItem }
 
-component :: ∀ m
-  . MonadAff _ m
+type TEffects e = (now :: NOW | Effects e)
+
+component :: ∀ m e
+  . MonadAff (TEffects e) m
  => H.Component HH.HTML Query Unit Void m
 component =
   H.parentComponent
@@ -50,7 +53,7 @@ component =
     initState :: State
     initState = { items: testData, selected: [] }
 
-    render :: State -> H.ParentHTML Query (ChildQuery _) ChildSlot m
+    render :: State -> H.ParentHTML Query (ChildQuery (TEffects e)) ChildSlot m
     render st =
       HH.div
         [ HP.class_ $ HH.ClassName "mw8 sans-serif center" ]
@@ -71,7 +74,7 @@ component =
             ( HE.input HandleContainer )
         ]
 
-    eval :: Query ~> H.ParentDSL State Query (ChildQuery _) ChildSlot Void m
+    eval :: Query ~> H.ParentDSL State Query (ChildQuery (TEffects e)) ChildSlot Void m
     eval = case _ of
       Log str a -> a <$ do
         H.liftAff $ log str
